@@ -35,6 +35,8 @@ public class Order implements Serializable {
     @OneToOne (cascade = CascadeType.ALL)
     private Device device;
 
+    private String status;
+
     public Order() {}
 
     private Order(Builder builder) {
@@ -45,6 +47,7 @@ public class Order implements Serializable {
         this.sendingAddress = builder.sendingAddress;
         this.receivingAddress = builder.receivingAddress;
         this.user = builder.user;
+        this.status = builder.status;
     }
 
     public void setDevice(Device device) {
@@ -87,6 +90,9 @@ public class Order implements Serializable {
         return receivingAddress;
     }
 
+    public String getStatus() {
+        return status;
+    }
 
     public static class Builder {
 
@@ -110,6 +116,9 @@ public class Order implements Serializable {
 
         @JsonProperty("user")
         private User user;
+
+        @JsonProperty("status")
+        private String status;
 
         public Builder setId(Long id) {
             this.id = id;
@@ -143,6 +152,11 @@ public class Order implements Serializable {
 
         public Builder setUser(User user){
             this.user = user;
+            return this;
+        }
+
+        public Builder setStatus(String status) {
+            this.status = status;
             return this;
         }
 
