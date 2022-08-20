@@ -66,8 +66,8 @@ public class OrderController {
         double stationLat = station.getLatitude();
         double stationLon = station.getLongitude();
 
-        List<Long> pickUpTime = orderService.getPickUpTime(sendingLon, sendingLat, stationLon, stationLat);
-        List<Long> deliveryTime = orderService.getDeliveryTime(sendingLon, sendingLat, receivingLon, receivingLat);
+        List<Long> pickUpTime = deliveryService.getPickUpTime(sendingLon, sendingLat, stationLon, stationLat);
+        List<Long> deliveryTime = deliveryService.getDeliveryTime(sendingLon, sendingLat, receivingLon, receivingLat);
         List<Double> cost = new ArrayList<>();
         cost.add(orderService.getCost(weight, 10, sendingLon, sendingLat, receivingLon, receivingLat, "ROBOT"));
         cost.add(orderService.getCost(weight, 10, sendingLon, sendingLat, receivingLon, receivingLat, "DRONE"));
@@ -80,9 +80,10 @@ public class OrderController {
     }
 
     @PostMapping("/order/{deviceType}")
-    public void addOrder(@RequestBody Order order, @PathVariable String deviceType, Principal principal) {// principal 在authentication之后存在用户线程中
+    public int addOrder(@RequestBody Order order, @PathVariable String deviceType, Principal principal) {// principal 在authentication之后存在用户线程中
         order.setUser(new User.Builder().setUsername(principal.getName()).build());
         orderService.placeOrder(order, deviceType);
+        return order.getTrackId();
     }
 
 }

@@ -37,8 +37,6 @@ public class Order implements Serializable {
     @OneToOne (cascade = CascadeType.ALL)
     private Device device;
 
-    private String status;
-
     public Order() {}
 
     private Order(Builder builder) {
@@ -98,10 +96,6 @@ public class Order implements Serializable {
 
     public String getReceivingAddress() {
         return receivingAddress;
-    }
-
-    public String getStatus() {
-        return status;
     }
 
     public static class Builder {
@@ -170,10 +164,6 @@ public class Order implements Serializable {
             return this;
         }
 
-        public Builder setStatus(String status) {
-            this.status = status;
-            return this;
-        }
 
         public Order build() {
             return new Order(this);

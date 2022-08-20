@@ -40,7 +40,6 @@ public class OrderService {
         this.geoCodingService = geoCodingService;
     }
 
-
     public double getCost(double weight, double size, double lon1, double lat1, double lon2, double lat2, String deviceType) {
         double ratio;
 
@@ -63,60 +62,6 @@ public class OrderService {
         return priceTwoDec;
     }
 
-    public List<Long> getPickUpTime(double lon1, double lat1, double lon2, double lat2) {
-        List<Long> list = new ArrayList<>();
-        //机器人
-
-        double robotDistance = getRobotDistance(lon1, lat1, lon2, lat2);
-        double robotTime = robotDistance / 0.2;
-        list.add(Double.valueOf(robotTime).longValue());
-
-        // 无人机
-
-        double droneDistance = getDroneDistance(lon1, lat1, lon2, lat2);
-        double droneTime = droneDistance/ 0.4;
-        list.add(Double.valueOf(droneTime).longValue());
-        return list;
-    }
-
-    public List<Long> getDeliveryTime(double lon1, double lat1, double lon2, double lat2) {
-        List<Long> list = new ArrayList<>();
-
-
-        double robotDistance = getRobotDistance(lon1, lat1, lon2, lat2);
-        double robotTime = robotDistance / 33.6;
-        System.out.println(robotDistance);
-        list.add(Double.valueOf(robotTime).longValue());
-
-        double droneDistance = getDroneDistance(lon1, lat1, lon2, lat2);
-        System.out.println(droneDistance);
-        double droneTime = droneDistance / 67.2;
-        list.add(Double.valueOf(droneTime).longValue());
-        return list;
-    }
-
-    private double getDroneDistance(double lon1, double lat1, double lon2, double lat2) {
-        double b = getLatitudeDistance(lat1, lat2);
-        double a = getLongitudeDistance(lon1, lon2);
-        return Math.sqrt((a * a + b * b));
-    }
-
-    private double getRobotDistance(double lon1, double lat1, double lon2, double lat2) {
-        double b = getLatitudeDistance(lat1, lat2);
-        double a = getLongitudeDistance(lon1, lon2);
-        return a + b;
-    }
-
-    private double getLongitudeDistance(double lon1, double lon2){
-        double jl_wd = 111712.69150641055729984301412873; // 每纬度单位米;
-        return Math.abs((lon1- lon2) * jl_wd);
-    }
-
-    private double getLatitudeDistance(double lat1, double lat2){
-        double jl_jd = 102834.74258026089786013677476285; // 每经度单位米;
-        return Math.abs((lat1- lat2) * jl_jd);
-    }
-
     public int generateTrackingNumber() {
         int trackId = Math.abs(new Random(100).nextInt());
 
@@ -127,7 +72,7 @@ public class OrderService {
         return trackId;
     }
 
-    public void placeOrder(Order order, String deviceType) {
+    public int placeOrder(Order order, String deviceType) {
         String sendingAddress = order.getSendingAddress();
         String receivingAddress = order.getReceivingAddress();
 
@@ -137,15 +82,15 @@ public class OrderService {
         Long stationId = dispatchService.getClosestStationId(sendingLatLon[0], sendingLatLon[1]);
         List<Long> deviceIds = dispatchService.getAvailableDeviceIdsAtStation(stationId, deviceType);
         // can have some logic to pick device to use as extension
-        Device device = dispatchService.getDeviceById(deviceIds.get((int)Math.random() * deviceIds.size()));
+        Device device = dispatchService.getDeviceById(deviceIds.get((int) Math.random() * deviceIds.size()));
         Station station = device.getStation();
 
-        List<Long> pickUpTimes = getPickUpTime(station.getLatitude(), station.getLongitude(), sendingLatLon[0], sendingLatLon[1]);
-        List<Long> deliveryTimes = getDeliveryTime(receivingLatLon[0], receivingLatLon[1], sendingLatLon[0], sendingLatLon[1]);
+        List<Long> pickUpTimes = deliveryService.getPickUpTime(station.getLatitude(), station.getLongitude(), sendingLatLon[0], sendingLatLon[1]);
+        List<Long> deliveryTimes = deliveryService.getDeliveryTime(receivingLatLon[0], receivingLatLon[1], sendingLatLon[0], sendingLatLon[1]);
         long orderFulfillTime = 0L;
         if (device.getDeviceType().equals("ROBOT")) {
             orderFulfillTime = pickUpTimes.get(0) + deliveryTimes.get(0);
-        } else if (device.getDeviceType().equals("DRONE")){
+        } else if (device.getDeviceType().equals("DRONE")) {
             orderFulfillTime = pickUpTimes.get(1) + deliveryTimes.get(1);
         }
 
@@ -173,5 +118,6 @@ public class OrderService {
         DeviceReserveDate deviceReserveDate = new DeviceReserveDate(deviceReserveDateKey, device);
         deviceReserveDateRepository.save(deviceReserveDate);
         orderRepository.save(order);
+        return trackNum;
     }
 }
